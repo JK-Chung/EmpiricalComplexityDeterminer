@@ -21,12 +21,14 @@ void printIntArray(int array[], int length) {
 int main() {
 	const int length = 5;
 	int toSort[length];
+	int test[5] = {1,3,5,2,4};
 	fillIntArrayRandomly(toSort, length);
-	printIntArray(toSort, length);
+	printIntArray(test, length);
 	
-	mergesort(toSort, length);
-	printIntArray(toSort, length);
-	printf("Is sorted?\t%d\n", isSorted(toSort, length));
+	
+	mergesortMerge(&test[0], &test[3], &test[4]);
+	printIntArray(test, length);
+	printf("Is sorted?\t%d\n", isSorted(test, length));
 	return 0;
 }
 
@@ -43,13 +45,16 @@ int mergesort(int array[], int length) {
 }
 
 int mergesortRecursiveHelper(int array[], int begin, int end) {
-	if(!(begin < end))
+	if(begin >= end)
 		return 0;
 	
-	int middleIndex = (end - begin) / 2;
+	int middleIndex = begin + (end - begin) / 2;
+	printf("%d\t%d\t%d\t%d\n",begin,middleIndex,middleIndex+1,end);
 	mergesortRecursiveHelper(array, begin, middleIndex);
 	mergesortRecursiveHelper(array, middleIndex+1, end);
+	printIntArray(array,5);
 	mergesortMerge(&array[begin], &array[middleIndex+1], &array[end]);
+	printIntArray(array,5);
 	return 0; //temporary placeholder
 }
 
@@ -58,7 +63,10 @@ int mergesortRecursiveHelper(int array[], int begin, int end) {
  * This creates a copy of subArrayA so that subArrayA (within the greater array) can be modified. This is done to avoid copying both subarrays for better performance
 **/
 int mergesortMerge(int* subArrayL, int* subArrayR, int* endOfSubArrays) {
-	const int lengthOfSubArrayL = (subArrayR - subArrayL) / sizeof(int);
+	if(subArrayL == subArrayR || subArrayR == endOfSubArrays)
+		return 0;
+	
+	const int lengthOfSubArrayL = 1 + (subArrayR - subArrayL) / sizeof(int);
 	
 	int subArrayLCopy[lengthOfSubArrayL];
 	copyIntArray(subArrayLCopy, subArrayL, lengthOfSubArrayL);
@@ -66,13 +74,22 @@ int mergesortMerge(int* subArrayL, int* subArrayR, int* endOfSubArrays) {
 	// The following is only to make code easier to read
 	int* nextPlaceToPutElement = subArrayL;
 	subArrayL = subArrayLCopy;
-	int* endOfSubArrayL = subArrayLCopy + (sizeof(int) * lengthOfSubArrayL);
+	int* endOfSubArrayL = subArrayLCopy + (sizeof(int) * (lengthOfSubArrayL - 1));
 	
 	while(nextPlaceToPutElement <= endOfSubArrays) {
-		if(*subArrayL > *subArrayR || subArrayL >= endOfSubArrayL) {
+		if(subArrayL <= endOfSubArrayL && subArrayR <= endOfSubArrays) {
+			if(*subArrayL <= *subArrayR) {
+				*nextPlaceToPutElement = *subArrayL;
+				subArrayL += sizeof(int);
+			} else {
+				*nextPlaceToPutElement = *subArrayR;
+				subArrayR += sizeof(int);
+			}
+			printf("YES\n");
+		} else if(subArrayL > endOfSubArrayL) {
 			*nextPlaceToPutElement = *subArrayR;
 			subArrayR += sizeof(int);
-		} else if(subArrayR < endOfSubArrays){
+		} else {
 			*nextPlaceToPutElement = *subArrayL;
 			subArrayL += sizeof(int);
 		}
