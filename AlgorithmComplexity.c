@@ -2,12 +2,14 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define toSortLength 123456
+
 int bubblesort(int array[], int length);
 int isSorted(int array[], int length);
 
-int mergesortMerge(int* subArrayL, int* subArrayR, int* endOfSubArrays);
+int mergesortMerge(int array[], int subArrayLIndex, int subArrayRIndex, int subArraysLength);
 int mergesort(int array[], int length);
-int mergesortRecursiveHelper(int array[], int begin, int end);
+int mergesortRecursive(int array[], int begin, int end);
 
 void copyIntArray(int copyDestination[], int copySource[], int copySourceLength);
 void fillIntArrayRandomly(int array[], int length);
@@ -19,16 +21,14 @@ void printIntArray(int array[], int length) {
 }
 
 int main() {
-	const int length = 5;
-	int toSort[length];
-	int test[5] = {1,3,5,2,4};
-	fillIntArrayRandomly(toSort, length);
-	printIntArray(test, length);
-	
-	
-	mergesortMerge(&test[0], &test[3], &test[4]);
-	printIntArray(test, length);
-	printf("Is sorted?\t%d\n", isSorted(test, length));
+	int toSort[toSortLength];
+	fillIntArrayRandomly(toSort, toSortLength);
+
+	//printIntArray(toSort, toSortLength);
+	printf("Complexity:\t%d\n", mergesort(toSort, toSortLength));
+	//printIntArray(toSort, toSortLength);
+
+	printf("Is sorted?\t%d\n", isSorted(toSort, toSortLength));
 	return 0;
 }
 
@@ -40,62 +40,68 @@ int isSorted(int array[], int length) {
 	return 1;
 }
 
+/**
+ * Calls the mergesort recursive algorithm without needing the indices to be given as arguments
+**/
 int mergesort(int array[], int length) {
-	mergesortRecursiveHelper(array, 0, length - 1);
+	return mergesortRecursive(array, 0, length - 1);
 }
 
-int mergesortRecursiveHelper(int array[], int begin, int end) {
+/**
+ * Recursively carries out mergesort on an subarray of an array
+**/
+int mergesortRecursive(int array[], int begin, int end) {
 	if(begin >= end)
 		return 0;
 	
+    int complexity = 0;
+    
 	int middleIndex = begin + (end - begin) / 2;
-	printf("%d\t%d\t%d\t%d\n",begin,middleIndex,middleIndex+1,end);
-	mergesortRecursiveHelper(array, begin, middleIndex);
-	mergesortRecursiveHelper(array, middleIndex+1, end);
-	printIntArray(array,5);
-	mergesortMerge(&array[begin], &array[middleIndex+1], &array[end]);
-	printIntArray(array,5);
-	return 0; //temporary placeholder
+	complexity += mergesortRecursive(array, begin, middleIndex);
+	complexity += mergesortRecursive(array, middleIndex+1, end);
+	complexity += mergesortMerge(array, begin, middleIndex+1, 1+end-begin);
+	return complexity;
 }
 
 /**
  * Merges two, sorted subarrays so that the result is also sorted. The two subarrays must be consecutive to each other within a greater array
- * This creates a copy of subArrayA so that subArrayA (within the greater array) can be modified. This is done to avoid copying both subarrays for better performance
 **/
-int mergesortMerge(int* subArrayL, int* subArrayR, int* endOfSubArrays) {
-	if(subArrayL == subArrayR || subArrayR == endOfSubArrays)
-		return 0;
-	
-	const int lengthOfSubArrayL = 1 + (subArrayR - subArrayL) / sizeof(int);
-	
-	int subArrayLCopy[lengthOfSubArrayL];
-	copyIntArray(subArrayLCopy, subArrayL, lengthOfSubArrayL);
-	
-	// The following is only to make code easier to read
-	int* nextPlaceToPutElement = subArrayL;
-	subArrayL = subArrayLCopy;
-	int* endOfSubArrayL = subArrayLCopy + (sizeof(int) * (lengthOfSubArrayL - 1));
-	
-	while(nextPlaceToPutElement <= endOfSubArrays) {
-		if(subArrayL <= endOfSubArrayL && subArrayR <= endOfSubArrays) {
-			if(*subArrayL <= *subArrayR) {
-				*nextPlaceToPutElement = *subArrayL;
-				subArrayL += sizeof(int);
-			} else {
-				*nextPlaceToPutElement = *subArrayR;
-				subArrayR += sizeof(int);
-			}
-			printf("YES\n");
-		} else if(subArrayL > endOfSubArrayL) {
-			*nextPlaceToPutElement = *subArrayR;
-			subArrayR += sizeof(int);
-		} else {
-			*nextPlaceToPutElement = *subArrayL;
-			subArrayL += sizeof(int);
-		}
-		nextPlaceToPutElement += sizeof(int);
-	}
-	return 0; //placeholder
+int mergesortMerge(int array[], int subArrayLIndex, int subArrayRIndex, int subArraysLength) {
+    int noOfElementAccesses = 0;
+
+    int subArraysCopy[subArraysLength];
+    copyIntArray(subArraysCopy, &array[subArrayLIndex], subArraysLength);
+    noOfElementAccesses += subArraysLength;
+
+    // The copy's indices will be different to the corresponding indices of the argument array[]
+    int copysSubArrayLIndex = 0;
+    int copysSubArrayRIndex = subArrayRIndex - subArrayLIndex;
+    const int lastIndexOfCopysSubArrayL = copysSubArrayRIndex - 1;
+    const int lastIndexOfCopysSubArrayR = subArraysLength - 1;
+
+    int nextIndexToPlaceElement = subArrayLIndex;
+
+    while(nextIndexToPlaceElement < subArrayLIndex + subArraysLength) {
+        if(copysSubArrayLIndex > lastIndexOfCopysSubArrayL) {
+            array[nextIndexToPlaceElement] = subArraysCopy[copysSubArrayRIndex];
+            copysSubArrayRIndex++;
+        } else if(copysSubArrayRIndex > lastIndexOfCopysSubArrayR) {
+            array[nextIndexToPlaceElement] = subArraysCopy[copysSubArrayLIndex];
+            copysSubArrayLIndex++;
+        } else {
+            if(subArraysCopy[copysSubArrayLIndex] <= subArraysCopy[copysSubArrayRIndex]) {
+                array[nextIndexToPlaceElement] = subArraysCopy[copysSubArrayLIndex];
+                copysSubArrayLIndex++;
+            } else {
+                array[nextIndexToPlaceElement] = subArraysCopy[copysSubArrayRIndex];
+                copysSubArrayRIndex++;
+            }
+        }
+        nextIndexToPlaceElement++;
+        noOfElementAccesses++;
+    }
+
+    return noOfElementAccesses++;
 }
 
 /**
