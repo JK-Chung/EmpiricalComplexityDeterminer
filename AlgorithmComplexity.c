@@ -2,10 +2,14 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define toSortLength 123456
+#define toSortLength 5
 
 int bubblesort(int array[], int length);
 int isSorted(int array[], int length);
+
+int quicksort(int array[], int length);
+int quicksortRecursiveHelper(int array[], int front, int rear);
+int partition(int array[], int front, int rear);
 
 int mergesortMerge(int array[], int subArrayLIndex, int subArrayRIndex, int subArraysLength);
 int mergesort(int array[], int length);
@@ -24,9 +28,9 @@ int main() {
 	int toSort[toSortLength];
 	fillIntArrayRandomly(toSort, toSortLength);
 
-	//printIntArray(toSort, toSortLength);
-	printf("Complexity:\t%d\n", mergesort(toSort, toSortLength));
-	//printIntArray(toSort, toSortLength);
+	printIntArray(toSort, toSortLength);
+	quicksort(toSort, toSortLength);
+	printIntArray(toSort, toSortLength);
 
 	printf("Is sorted?\t%d\n", isSorted(toSort, toSortLength));
 	return 0;
@@ -38,6 +42,59 @@ int isSorted(int array[], int length) {
 			return 0;
 	}
 	return 1;
+}
+
+int quicksort(int array[], int length) {
+    return quicksortRecursiveHelper(array, 0, length-1);
+}
+
+int quicksortRecursiveHelper(int array[], int front, int rear) {
+    if(front >= rear)
+        return 0;
+
+    int pivotIndex = partition(array, front, rear);
+    quicksortRecursiveHelper(array, front, pivotIndex-1);
+    quicksortRecursiveHelper(array, pivotIndex+1, rear);
+
+    return 0; //placeholder;
+}
+
+int partition(int array[], int front, int rear) {
+    int pivotIndex = front;
+    int indexToCheckAgainstPivot = rear;
+
+    int temp;
+    START_PIVOTING:
+        if(pivotIndex == indexToCheckAgainstPivot)
+            goto END_PIVOTING;
+        while(pivotIndex < indexToCheckAgainstPivot) {
+            if(array[pivotIndex] >= array[indexToCheckAgainstPivot]) {
+                temp = array[pivotIndex];
+                array[pivotIndex] = array[indexToCheckAgainstPivot];
+                array[indexToCheckAgainstPivot] = temp;
+
+                temp = pivotIndex;
+                pivotIndex = indexToCheckAgainstPivot;
+                indexToCheckAgainstPivot = temp + 1;
+            } else
+                indexToCheckAgainstPivot--;
+        }
+        while(pivotIndex > indexToCheckAgainstPivot) {
+            if(array[pivotIndex] <= array[indexToCheckAgainstPivot]) {
+                temp = array[pivotIndex];
+                array[pivotIndex] = array[indexToCheckAgainstPivot];
+                array[indexToCheckAgainstPivot] = temp;
+
+                temp = pivotIndex;
+                pivotIndex = indexToCheckAgainstPivot;
+                indexToCheckAgainstPivot = temp - 1;
+            } else
+                indexToCheckAgainstPivot++;
+        }
+        goto START_PIVOTING;
+    END_PIVOTING:
+
+    return pivotIndex;
 }
 
 /**
