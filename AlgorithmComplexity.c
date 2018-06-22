@@ -2,26 +2,26 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define toSortLength 500
+#define toSortLength 50000
 
-int selectionsort(int array[], int length);
-int insertionsort(int array[], int length);
+unsigned long selectionsort(int array[], int length);
+unsigned long insertionsort(int array[], int length);
 
-int bubblesort(int array[], int length);
-int isSorted(int array[], int length);
+unsigned long bubblesort(int array[], int length);
 
-int quicksort(int array[], int length);
-int quicksortRecursiveHelper(int array[], int front, int rear);
-int partition(int array[], int front, int rear, int* pivotIndexToReturn);
+unsigned long quicksort(int array[], int length);
+unsigned long quicksortRecursiveHelper(int array[], int front, int rear);
+unsigned long partition(int array[], int front, int rear, int* pivotIndexToReturn);
 
-int mergesortMerge(int array[], int subArrayLIndex, int subArrayRIndex, int subArraysLength);
-int mergesort(int array[], int length);
-int mergesortRecursive(int array[], int begin, int end);
+unsigned long mergesortMerge(int array[], int subArrayLIndex, int subArrayRIndex, int subArraysLength);
+unsigned long mergesort(int array[], int length);
+unsigned long mergesortRecursive(int array[], int begin, int end);
 
 void copyIntArray(int copyDestination[], int copySource[], int copySourceLength);
 void fillIntArrayRandomly(int array[], int length);
 void swapIntegerValues(int* a, int* b);
 int* getSmallestInteger(int array[], int length);
+int isSorted(int array[], int length);;
 
 void printIntArray(int array[], int length) {
 	for(int i = 0; i < length - 1; i++)
@@ -34,7 +34,7 @@ int main() {
 	fillIntArrayRandomly(toSort, toSortLength);
 
 	//printIntArray(toSort, toSortLength);
-	printf("Complexity:\t%d\n", selectionsort(toSort, toSortLength));
+	printf("Complexity:\t%lu\n", bubblesort(toSort, toSortLength));
 	//printIntArray(toSort, toSortLength);
 
 	printf("Is sorted?\t%d\n", isSorted(toSort, toSortLength));
@@ -49,8 +49,8 @@ int isSorted(int array[], int length) {
 	return 1;
 }
 
-int selectionsort(int array[], int length) {
-    int complexity = 0;
+unsigned long selectionsort(int array[], int length) {
+    unsigned long complexity = 0;
 
     for(int i = 0; i < length; i++) {
         swapIntegerValues(getSmallestInteger(&array[i], length-i), &array[i]);
@@ -60,8 +60,8 @@ int selectionsort(int array[], int length) {
     return complexity;
 }
 
-int insertionsort(int array[], int length) {
-    int noOfComparisons = 0;
+unsigned long insertionsort(int array[], int length) {
+    unsigned long noOfComparisons = 0;
     
     for(int i = 1; i < length; i++) {
         while(array[i-1] > array[i] && i != 0) {
@@ -77,18 +77,18 @@ int insertionsort(int array[], int length) {
 /**
  * Quicksorts an array with fewer arguments required that that of the quicksortRecursiveHelper
 **/
-int quicksort(int array[], int length) {
+unsigned long quicksort(int array[], int length) {
     return quicksortRecursiveHelper(array, 0, length-1);
 }
 
 /**
  * Carries out quicksort on a subarray recursively
 **/
-int quicksortRecursiveHelper(int array[], int front, int rear) {
+unsigned long quicksortRecursiveHelper(int array[], int front, int rear) {
     if(front >= rear)
         return 0;
 
-    int complexity = 0;
+    unsigned long complexity = 0;
     int pivotIndex;
     complexity += partition(array, front, rear, &pivotIndex);
     complexity += quicksortRecursiveHelper(array, front, pivotIndex-1);
@@ -102,10 +102,10 @@ int quicksortRecursiveHelper(int array[], int front, int rear) {
  * of that first element is less than or equal to it and all to the right are greater. The final index of this element is stored in the pointer argument
  * This function will return the number of times that an element of the array is accessed.
 **/
-int partition(int array[], int front, int rear, int* pivotIndexToReturn) {
+unsigned long partition(int array[], int front, int rear, int* pivotIndexToReturn) {
     int pivotIndex = front;
     int indexToCheckAgainstPivot = rear;
-    int noOfElementAccesses = 0;
+    unsigned long noOfElementAccesses = 0;
 
     int temp;
     while(pivotIndex != indexToCheckAgainstPivot) {
@@ -136,18 +136,18 @@ int partition(int array[], int front, int rear, int* pivotIndexToReturn) {
 /**
  * Calls the mergesort recursive algorithm without needing the indices to be given as arguments
 **/
-int mergesort(int array[], int length) {
+unsigned long mergesort(int array[], int length) {
 	return mergesortRecursive(array, 0, length - 1);
 }
 
 /**
  * Recursively carries out mergesort on an subarray of an array
 **/
-int mergesortRecursive(int array[], int begin, int end) {
+unsigned long mergesortRecursive(int array[], int begin, int end) {
 	if(begin >= end)
 		return 0;
 	
-    int complexity = 0;
+    unsigned long complexity = 0;
     
 	int middleIndex = begin + (end - begin) / 2;
 	complexity += mergesortRecursive(array, begin, middleIndex);
@@ -159,8 +159,8 @@ int mergesortRecursive(int array[], int begin, int end) {
 /**
  * Merges two, sorted subarrays so that the result is also sorted. The two subarrays must be consecutive to each other within a greater array
 **/
-int mergesortMerge(int array[], int subArrayLIndex, int subArrayRIndex, int subArraysLength) {
-    int noOfElementAccesses = 0;
+unsigned long mergesortMerge(int array[], int subArrayLIndex, int subArrayRIndex, int subArraysLength) {
+    unsigned long noOfElementAccesses = 0;
 
     int subArraysCopy[subArraysLength];
     copyIntArray(subArraysCopy, &array[subArrayLIndex], subArraysLength);
@@ -200,9 +200,9 @@ int mergesortMerge(int array[], int subArrayLIndex, int subArrayRIndex, int subA
 /**
  * Bubblesorts an integer array. Returns the number of element comparisons made
 **/
-int bubblesort(int array[], int length) {
+unsigned long bubblesort(int array[], int length) {
 	int isSorted = 0;
-	int noOfComparisons = 0;
+	unsigned long noOfComparisons = 0;
 	
 	int temp;
 	while(!isSorted) {
