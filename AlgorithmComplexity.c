@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <pthread.h>
 
 #define toSortLength 50000
 
 unsigned long selectionsort(int array[], int length);
 unsigned long insertionsort(int array[], int length);
 
+unsigned long bubblesortThreadHelper(int array[], int length);
 unsigned long bubblesort(int array[], int length);
 
 unsigned long quicksort(int array[], int length);
@@ -34,7 +36,7 @@ int main() {
 	fillIntArrayRandomly(toSort, toSortLength);
 
 	//printIntArray(toSort, toSortLength);
-	printf("Complexity:\t%lu\n", bubblesort(toSort, toSortLength));
+	printf("Complexity:\t%lu\n", bubblesortThreadHelper(toSort, toSortLength));
 	//printIntArray(toSort, toSortLength);
 
 	printf("Is sorted?\t%d\n", isSorted(toSort, toSortLength));
@@ -195,6 +197,15 @@ unsigned long mergesortMerge(int array[], int subArrayLIndex, int subArrayRIndex
     }
 
     return noOfElementAccesses++;
+}
+
+unsigned long bubblesortThreadHelper(int array[], int length) {
+    pthread_t thread1;
+    pthread_create(&thread1, NULL, bubblesort, array, length);
+    pthread_t thread2;
+    pthread_join(thread1, NULL);
+    pthread_join(thread2, NULL);
+    return 0;   //placeholder
 }
 
 /**
