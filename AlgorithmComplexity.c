@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define toSortLength 123456
+#define toSortLength 500
+
+int selectionsort(int array[], int length);
+int insertionsort(int array[], int length);
 
 int bubblesort(int array[], int length);
 int isSorted(int array[], int length);
@@ -17,6 +20,8 @@ int mergesortRecursive(int array[], int begin, int end);
 
 void copyIntArray(int copyDestination[], int copySource[], int copySourceLength);
 void fillIntArrayRandomly(int array[], int length);
+void swapIntegerValues(int* a, int* b);
+int* getSmallestInteger(int array[], int length);
 
 void printIntArray(int array[], int length) {
 	for(int i = 0; i < length - 1; i++)
@@ -29,7 +34,7 @@ int main() {
 	fillIntArrayRandomly(toSort, toSortLength);
 
 	//printIntArray(toSort, toSortLength);
-	printf("Complexity:\t%d\n", quicksort(toSort, toSortLength));
+	printf("Complexity:\t%d\n", selectionsort(toSort, toSortLength));
 	//printIntArray(toSort, toSortLength);
 
 	printf("Is sorted?\t%d\n", isSorted(toSort, toSortLength));
@@ -44,10 +49,41 @@ int isSorted(int array[], int length) {
 	return 1;
 }
 
+int selectionsort(int array[], int length) {
+    int complexity = 0;
+
+    for(int i = 0; i < length; i++) {
+        swapIntegerValues(getSmallestInteger(&array[i], length-i), &array[i]);
+        complexity += length - i;
+    }
+
+    return complexity;
+}
+
+int insertionsort(int array[], int length) {
+    int noOfComparisons = 0;
+    
+    for(int i = 1; i < length; i++) {
+        while(array[i-1] > array[i] && i != 0) {
+            swapIntegerValues(&array[i-1], &array[i]);
+            i--;
+            noOfComparisons++;
+        }
+    }
+
+    return noOfComparisons;
+}
+
+/**
+ * Quicksorts an array with fewer arguments required that that of the quicksortRecursiveHelper
+**/
 int quicksort(int array[], int length) {
     return quicksortRecursiveHelper(array, 0, length-1);
 }
 
+/**
+ * Carries out quicksort on a subarray recursively
+**/
 int quicksortRecursiveHelper(int array[], int front, int rear) {
     if(front >= rear)
         return 0;
@@ -61,6 +97,11 @@ int quicksortRecursiveHelper(int array[], int front, int rear) {
     return complexity;
 }
 
+/**
+ * Takes the first element of the subarray specified by array[], front and rear and rearranges the subarray so that all elements to the left
+ * of that first element is less than or equal to it and all to the right are greater. The final index of this element is stored in the pointer argument
+ * This function will return the number of times that an element of the array is accessed.
+**/
 int partition(int array[], int front, int rear, int* pivotIndexToReturn) {
     int pivotIndex = front;
     int indexToCheckAgainstPivot = rear;
@@ -70,26 +111,18 @@ int partition(int array[], int front, int rear, int* pivotIndexToReturn) {
     while(pivotIndex != indexToCheckAgainstPivot) {
         while(pivotIndex < indexToCheckAgainstPivot) {
             if(array[pivotIndex] >= array[indexToCheckAgainstPivot]) {
-                temp = array[pivotIndex];
-                array[pivotIndex] = array[indexToCheckAgainstPivot];
-                array[indexToCheckAgainstPivot] = temp;
-
-                temp = pivotIndex;
-                pivotIndex = indexToCheckAgainstPivot;
-                indexToCheckAgainstPivot = temp + 1;
+                swapIntegerValues(&array[pivotIndex], &array[indexToCheckAgainstPivot]);
+                swapIntegerValues(&pivotIndex, &indexToCheckAgainstPivot);
+                indexToCheckAgainstPivot++;
             } else
                 indexToCheckAgainstPivot--;
             noOfElementAccesses++;
         }
         while(pivotIndex > indexToCheckAgainstPivot) {
             if(array[pivotIndex] <= array[indexToCheckAgainstPivot]) {
-                temp = array[pivotIndex];
-                array[pivotIndex] = array[indexToCheckAgainstPivot];
-                array[indexToCheckAgainstPivot] = temp;
-
-                temp = pivotIndex;
-                pivotIndex = indexToCheckAgainstPivot;
-                indexToCheckAgainstPivot = temp - 1;
+                swapIntegerValues(&array[pivotIndex], &array[indexToCheckAgainstPivot]);
+                swapIntegerValues(&pivotIndex, &indexToCheckAgainstPivot);
+                indexToCheckAgainstPivot--;
             } else
                 indexToCheckAgainstPivot++;
             noOfElementAccesses++;
@@ -176,10 +209,7 @@ int bubblesort(int array[], int length) {
 		isSorted = 1;
 		for(int i = 0; i < length - 1; i++) {
 			if(array[i] > array[i + 1]) {
-				temp = array[i];
-				array[i] = array[i+1];
-				array[i+1] = temp;
-				
+                swapIntegerValues(&array[i], &array[i+1]);
 				isSorted = 0;
 			}
 			noOfComparisons++;
@@ -205,4 +235,23 @@ void fillIntArrayRandomly(int array[], int length) {
 void copyIntArray(int copyDestination[], int copySource[], int copySourceLength) {
 	for(int i = 0; i < copySourceLength; i++)
 		copyDestination[i] = copySource[i];
+}
+
+/**
+ * Swaps the dereferenced values of the two pointer arguments
+**/
+void swapIntegerValues(int* a, int* b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+int* getSmallestInteger(int array[], int length) {
+    int* pointerToSmallest = &array[0];
+    for(int i = 1; i < length; i++) {
+        if(array[i] < *pointerToSmallest)
+            pointerToSmallest = &array[i];
+    }
+
+    return pointerToSmallest;
 }
