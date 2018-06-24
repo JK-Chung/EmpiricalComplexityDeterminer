@@ -3,13 +3,21 @@
 #include <time.h>
 #include <pthread.h>
 
+#define TRUE 1
+#define FALSE 0
+
 #define toSortLength 50000
+
+typedef struct {
+    int* array;
+    int length;
+} IntegerArray;
 
 unsigned long selectionsort(int array[], int length);
 unsigned long insertionsort(int array[], int length);
 
-unsigned long bubblesortThreadHelper(int array[], int length);
-unsigned long bubblesort(int array[], int length);
+unsigned long bubblesortThreadHelper(IntegerArray a);
+void* bubblesort(IntegerArray a);
 
 unsigned long quicksort(int array[], int length);
 unsigned long quicksortRecursiveHelper(int array[], int front, int rear);
@@ -34,12 +42,12 @@ void printIntArray(int array[], int length) {
 int main() {
 	int toSort[toSortLength];
 	fillIntArrayRandomly(toSort, toSortLength);
-
+    IntegerArray arr = {&toSort[0], toSortLength};
 	//printIntArray(toSort, toSortLength);
-	printf("Complexity:\t%lu\n", bubblesortThreadHelper(toSort, toSortLength));
+	printf("Complexity:\t%lu\n", bubblesortThreadHelper(arr));
 	//printIntArray(toSort, toSortLength);
 
-	printf("Is sorted?\t%d\n", isSorted(toSort, toSortLength));
+	printf("Is sorted?\t%d\n", isSorted(arr.array, arr.length));
 	return 0;
 }
 
@@ -199,34 +207,35 @@ unsigned long mergesortMerge(int array[], int subArrayLIndex, int subArrayRIndex
     return noOfElementAccesses++;
 }
 
-unsigned long bubblesortThreadHelper(int array[], int length) {
-    pthread_t thread1;
-    pthread_create(&thread1, NULL, bubblesort, array, length);
-    pthread_t thread2;
-    pthread_join(thread1, NULL);
-    pthread_join(thread2, NULL);
-    return 0;   //placeholder
+unsigned long bubblesortThreadHelper(IntegerArray a) {
+    pthread_t thread1, thread2;
+    void* complexity1, complexity2;
+    pthread_create(&thread1, NULL, bubblesort, (void *) &((void*) a));
+    pthread_create(&thread2, NULL, bubblesort, (void *) &((void*) a));
+    pthread_join(thread1, &complexity1);
+    pthread_join(thread2, &complexity2);
+    return *((int*) complexity1) + *((int*) complexity2);
 }
 
 /**
  * Bubblesorts an integer array. Returns the number of element comparisons made
 **/
-unsigned long bubblesort(int array[], int length) {
+void* bubblesort(IntegerArray a) {
 	int isSorted = 0;
 	unsigned long noOfComparisons = 0;
 	
 	int temp;
 	while(!isSorted) {
 		isSorted = 1;
-		for(int i = 0; i < length - 1; i++) {
-			if(array[i] > array[i + 1]) {
-                swapIntegerValues(&array[i], &array[i+1]);
+		for(int i = 0; i < a.length - 1; i++) {
+			if(a.array[i] > a.array[i + 1]) {
+                swapIntegerValues(&a.array[i], &a.array[i+1]);
 				isSorted = 0;
 			}
 			noOfComparisons++;
 		}
 	}
-	return noOfComparisons;
+	return (void *) noOfComparisons;
 }
 
 /**
