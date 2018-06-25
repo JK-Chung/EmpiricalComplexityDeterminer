@@ -5,8 +5,10 @@
 
 #define TRUE 1
 #define FALSE 0
+#define SUCCESS 0
+#define FAIL 1
 
-#define toSortLength 50000
+#define toSortLength 10000
 
 typedef struct {
     int* array;
@@ -28,7 +30,7 @@ unsigned long mergesort(int array[], int length);
 unsigned long mergesortRecursive(int array[], int begin, int end);
 
 void copyIntArray(int copyDestination[], int copySource[], int copySourceLength);
-void fillIntArrayRandomly(int array[], int length);
+void fillIntArrayRandomly(int array[], int length, int maxInteger);
 void swapIntegerValues(int* a, int* b);
 int* getSmallestInteger(int array[], int length);
 int isSorted(int array[], int length);;
@@ -41,22 +43,22 @@ void printIntArray(int array[], int length) {
 
 int main() {
 	int toSort[toSortLength];
-	fillIntArrayRandomly(toSort, toSortLength);
+	fillIntArrayRandomly(toSort, toSortLength, 1000);
     IntegerArray arr = {&toSort[0], toSortLength};
 	//printIntArray(toSort, toSortLength);
 	printf("Complexity:\t%lu\n", bubblesortThreadHelper(arr));
 	//printIntArray(toSort, toSortLength);
 
 	printf("Is sorted?\t%d\n", isSorted(arr.array, arr.length));
-	return 0;
+	return SUCCESS;
 }
 
 int isSorted(int array[], int length) {
 	for(int i = 0; i < length - 1; i++) {
 		if(array[i] > array[i+1])
-			return 0;
+			return FALSE;
 	}
-	return 1;
+	return TRUE;
 }
 
 unsigned long selectionsort(int array[], int length) {
@@ -209,12 +211,14 @@ unsigned long mergesortMerge(int array[], int subArrayLIndex, int subArrayRIndex
 
 unsigned long bubblesortThreadHelper(IntegerArray a) {
     pthread_t thread1, thread2;
-    void* complexity1, complexity2;
-    pthread_create(&thread1, NULL, bubblesort, (void *) &((void*) a));
-    pthread_create(&thread2, NULL, bubblesort, (void *) &((void*) a));
+    void* complexity1;
+    void* complexity2;
+    pthread_create(&thread1, NULL, (void* (*)(void*)) bubblesort, (void*) &a);
+    pthread_create(&thread2, NULL, (void* (*)(void*)) bubblesort, (void*) &a);
     pthread_join(thread1, &complexity1);
     pthread_join(thread2, &complexity2);
-    return *((int*) complexity1) + *((int*) complexity2);
+    printf("Done sorting\n");
+    return *((unsigned long*) complexity1) + *((unsigned long*) complexity2);
 }
 
 /**
@@ -235,17 +239,27 @@ void* bubblesort(IntegerArray a) {
 			noOfComparisons++;
 		}
 	}
-	return (void *) noOfComparisons;
+
+    unsigned long* toReturn = malloc(sizeof(unsigned long));
+    *toReturn = noOfComparisons;
+	return (void*) toReturn;
 }
 
 /**
  * Fills an integer array with random elements using the current time as its seed
+ * maxInteger specifies the largest possible integer that you want in your array.
+ * When this argument is zero or negative, rand()'s default will be used
 **/
-void fillIntArrayRandomly(int array[], int length) {
+void fillIntArrayRandomly(int array[], int length, int maxInteger) {
 	int randomSeed = time(NULL);
 	srand(randomSeed);
-	for(int i = 0; i < length; i++)
-		array[i] = rand();
+    if(maxInteger <= 0) {
+	    for(int i = 0; i < length; i++)
+		    array[i] = rand();
+    } else {
+        for(int i = 0; i < length; i++)
+		    array[i] = rand() % (maxInteger + 1);
+    }
 }
 
 /**
