@@ -5,21 +5,26 @@
 
 #define TRUE 1
 #define FALSE 0
-#define SUCCESS 0
-#define FAIL 1
+#define MAX_THREADS 4
 
-#define toSortLength 10000
+#define toSortLength 50000
 
 typedef struct {
     int* array;
     int length;
 } IntegerArray;
 
+typedef struct {
+    IntegerArray arr;
+    int* arrayOfIndicesAccessed;
+    int threadNo;
+} LockingHelper;
+
 unsigned long selectionsort(int array[], int length);
 unsigned long insertionsort(int array[], int length);
 
 unsigned long bubblesortThreadHelper(IntegerArray a);
-void* bubblesort(IntegerArray a);
+void* bubblesort(LockingHelper a);
 
 unsigned long quicksort(int array[], int length);
 unsigned long quicksortRecursiveHelper(int array[], int front, int rear);
@@ -50,7 +55,7 @@ int main() {
 	//printIntArray(toSort, toSortLength);
 
 	printf("Is sorted?\t%d\n", isSorted(arr.array, arr.length));
-	return SUCCESS;
+	return EXIT_SUCCESS;
 }
 
 int isSorted(int array[], int length) {
@@ -210,31 +215,45 @@ unsigned long mergesortMerge(int array[], int subArrayLIndex, int subArrayRIndex
 }
 
 unsigned long bubblesortThreadHelper(IntegerArray a) {
-    pthread_t thread1, thread2;
-    void* complexity1;
-    void* complexity2;
-    pthread_create(&thread1, NULL, (void* (*)(void*)) bubblesort, (void*) &a);
-    pthread_create(&thread2, NULL, (void* (*)(void*)) bubblesort, (void*) &a);
-    pthread_join(thread1, &complexity1);
-    pthread_join(thread2, &complexity2);
-    printf("Done sorting\n");
-    return *((unsigned long*) complexity1) + *((unsigned long*) complexity2);
+    LockingHelper helpers[MAX_THREADS];
+    int arrayOfIndicesAccessed[MAX_THREADS];
+    for(int i = 0; i < MAX_THREADS; i++)
+        helpers[i] = (LockingHelper) {a, arrayOfIndicesAccessed, i};
+
+    pthread_t threadIDs[MAX_THREADS];
+    for(int i = 0; i < MAX_THREADS; i++)
+        pthread_create(&threadIDs[i], NULL, (void* (*)(void*)) bubblesort, (void*) &helpers[i]);
+    
+    void* threadComplexities[MAX_THREADS];
+    for(int i = 0; i < MAX_THREADS; i++)
+        pthread_join(threadIDs[i], &threadComplexities[i]);
+
+
+    unsigned long totalComplexity = 0;
+    for(int i = 0; i < MAX_THREADS; i++) {
+        totalComplexity += *((unsigned long*) threadComplexities[i]);
+        free(threadComplexities[i]);
+    }
+    return totalComplexity;
 }
 
 /**
  * Bubblesorts an integer array. Returns the number of element comparisons made
 **/
-void* bubblesort(IntegerArray a) {
-	int isSorted = 0;
+void* bubblesort(LockingHelper helper) {
+    IntegerArray* a = helper.arr;
+    int* i = &helper.arrayOfIndicesAccessed[helper.threadNo];
+
+	int isSorted = FALSE;
 	unsigned long noOfComparisons = 0;
 	
 	int temp;
 	while(!isSorted) {
-		isSorted = 1;
+		isSorted = TRUE;
 		for(int i = 0; i < a.length - 1; i++) {
 			if(a.array[i] > a.array[i + 1]) {
                 swapIntegerValues(&a.array[i], &a.array[i+1]);
-				isSorted = 0;
+				isSorted = FALSE;
 			}
 			noOfComparisons++;
 		}
